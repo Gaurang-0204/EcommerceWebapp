@@ -4,6 +4,7 @@ import { IoMdSearch } from "react-icons/io";
 import { FaCartShopping } from "react-icons/fa6";
 import { FaCaretDown } from "react-icons/fa";
 import DarkMode from "./DarkMode";
+import { Link } from "react-router-dom";
 
 const Menu = [
   {
@@ -81,16 +82,28 @@ const Navbar = ({ handleOrderPopup }) => {
             </div>
 
             {/* order button */}
+            <Link to="/Cart">
             <button
               onClick={() => handleOrderPopup()}
               className="bg-gradient-to-r from-primary to-secondary transition-all duration-200 text-white  py-1 px-4 rounded-full flex items-center gap-3 group"
             >
               <span className="group-hover:block hidden transition-all duration-200">
-                Order
+                Cart
               </span>
               <FaCartShopping className="text-xl text-white drop-shadow-sm cursor-pointer" />
             </button>
+            </Link>
 
+            <Link to="/Login">
+            <button
+              className="bg-gradient-to-r from-primary to-secondary transition-all duration-200 text-white  py-1 px-4 rounded-full flex items-center gap-3 group"
+            >
+              
+                Login
+             
+              
+            </button>
+            </Link>
             {/* Darkmode Switch */}
             <div>
               <DarkMode />

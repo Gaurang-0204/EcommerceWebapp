@@ -6,7 +6,7 @@
 // import { FaStar } from "react-icons/fa6";
 // import axios from "axios"
 // import React, { useEffect, useState } from "react";
-// import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 // import { useNavigate } from "react-router-dom";
 
 // // const ProductsData = [
@@ -244,6 +244,15 @@ const AllProducts = () => {
             </div>
           </div>
         ))}
+
+<div className="flex justify-center mt-10 mb-4">
+  <Link to="/Allproducts">
+    <button className="text-center cursor-pointer bg-primary text-white py-1 px-5 rounded-md">
+      View All Button
+    </button>
+  </Link>
+</div>
+
       </div>
     </div>
   );
