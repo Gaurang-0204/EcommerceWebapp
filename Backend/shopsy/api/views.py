@@ -229,5 +229,50 @@ class UserView(APIView):
         if request.user.role == 'user':
             return Response({"message": "Welcome, User!"})
         return Response({"message": "Access Denied"}, status=status.HTTP_403_FORBIDDEN)
+    
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])  # Ensure only authenticated users can access this view
+def get_user_data(request):
+    user = request.user  # Fetch the currently logged-in user
+
+    # Ensure the user is an instance of the CustomUser model and handle missing fields gracefully
+    try:
+        return Response({
+            "name": user.get_full_name(),  # Full name of the user
+            "email": user.email,  # Email address
+            "street": getattr(user, 'street', None),  # Street address
+            "city": getattr(user, 'city', None),  # City
+            "state": getattr(user, 'state', None),  # State
+            "pincode": getattr(user, 'pincode', None),  # Pincode
+        })
+    except Exception as e:
+        return Response({"error": f"Error retrieving user data: {str(e)}"}, status=400)
+
+
+
+
+
+
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Order
+from .serializers import OrderSerializer
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])  # Ensure only authenticated users can access this endpoint
+def create_order(request):
+    serializer = OrderSerializer(data=request.data)
+    if serializer.is_valid():
+        # Automatically associate the order with the logged-in user
+        serializer.save(user=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 

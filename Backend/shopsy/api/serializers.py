@@ -59,3 +59,14 @@ class LoginSerializer(serializers.Serializer):
         return user
 
 
+from rest_framework import serializers
+from .models import Order
+
+class OrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ['items', 'total_price', 'street', 'city', 'state', 'pincode']
+        # Do not include 'user' in the fields
+
+
+

@@ -95,6 +95,7 @@
 
 import React, { useState, useEffect } from "react";
 import Navbar from "../Navbar/Navbar";
+import { Link, Links } from "react-router-dom";
 
 const CartPage = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -176,12 +177,14 @@ const CartPage = () => {
             <span>Total price:</span>
             <span>${total.toFixed(2)}</span>
           </div>
+          <Link to= '/Checkout'>
           <button
             className="w-full bg-primary text-white py-3 rounded-md "
             onClick={() => alert("Purchase successful!")}
           >
             MAKE PURCHASE
           </button>
+          </Link>
           <a href="/AllProducts" className="block text-center text-bg-primary mt-4 hover:underline">
             Back to shop
           </a>
