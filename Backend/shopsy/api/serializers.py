@@ -65,8 +65,28 @@ from .models import Order
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
-        fields = ['items', 'total_price', 'street', 'city', 'state', 'pincode']
-        # Do not include 'user' in the fields
+        fields = ['id', 'items', 'total_price', 'street', 'city', 'state', 'pincode', 'created_at']
+
+
+
+from rest_framework import serializers
+from .models import CustomUser
+
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['username', 'role', 'city', 'street', 'pincode', 'state']
+        read_only_fields = ['username', 'role']  # Prevent updating username and role directly
+
+
+from rest_framework import serializers
+from .models import Category
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['name', 'description']  # We only need the name and description for creating a category
+
 
 
 

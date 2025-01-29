@@ -21,6 +21,8 @@ import Login from "./components/Authentication/Login";
 import Register from "./components/Authentication/Register";
 import CartPage from "./components/Cart/CartPage";
 import CheckoutPage from "./components/Cart/Checkoutpage";
+import ProfilePage from "./components/Profile/ProfilePage";
+import EditProfile from "./components/Profile/EditProfile";
 const App = () => {
   const [orderPopup, setOrderPopup] = React.useState(false);
 
@@ -51,6 +53,8 @@ const App = () => {
         <Route path="/Register" element={<Register />} />
         <Route path="/Cart" element={<CartPage />} />
         <Route path="/Checkout" element={<CheckoutPage />} />
+        <Route path="/ProfilePage" element={<ProfilePage />} />
+        <Route path="/EditProfile" element={<EditProfile />} />
         </Routes>
       </Router>
     </div>

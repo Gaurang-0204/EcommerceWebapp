@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import product_list_view
-from .views import add_product,categories_list,detail,register, login_view, AdminView, UserView,get_user_data,create_order
+from .views import add_product,categories_list,detail,register, login_view, AdminView, UserView,get_user_data,create_order, get_user_orders,user_profile,update_user_profile,create_category,products_by_category
 from rest_framework_simplejwt.views import TokenRefreshView
 
 
@@ -16,4 +16,10 @@ urlpatterns = [
     path('user-data/', get_user_data, name='user-data'),
     path('orders/', create_order, name='create-order'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('order/', get_user_orders, name='user-orders'),
+    path('user/', user_profile, name='user_profile'),
+    path('update/user/', update_user_profile, name='update_user_profile'),
+    path('category/', create_category, name='create_category'),
+     path('products-by-category/', products_by_category, name='products_by_category'),
+   
 ]

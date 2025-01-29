@@ -14,8 +14,8 @@ const Menu = [
   },
   {
     id: 2,
-    name: "Top Rated",
-    link: "/#services",
+    name: "Profile ",
+    link: "/ProfilePage",
   },
   {
     id: 3,

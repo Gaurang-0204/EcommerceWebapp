@@ -275,4 +275,134 @@ def create_order(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from .models import CustomUser, Order
+from .serializers import UserSerializer, OrderSerializer
+
+# @api_view(['GET', 'PUT'])
+# @permission_classes([IsAuthenticated])
+# def user_detail(request):
+#     if request.method == 'GET':
+#         serializer = UserSerializer(request.user)
+#         return Response(serializer.data)
+#     elif request.method == 'PUT':
+#         serializer = UserSerializer(request.user, data=request.data, partial=True)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data)
+#         return Response(serializer.errors, status=400)
+
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])  # Ensure permission_classes is before api_view
+# def user_orders(request):
+#     try:
+#         orders = Order.objects.filter(user=request.user)
+#         if not orders.exists():
+#             return Response({"message": "No orders found."}, status=404)
+
+#         serializer = OrderSerializer(orders, many=True)
+#         return Response(serializer.data, status=200)
+    
+#     except Exception as e:
+#         return Response({"error": str(e)}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])  # Ensure user is logged in
+def get_user_orders(request):
+    user = request.user  # Get the logged-in user
+    orders = Order.objects.filter(user=user)  # Fetch orders for this user
+    serializer = OrderSerializer(orders, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from .models import CustomUser
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .models import CustomUser
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_profile(request):
+    try:
+        user = CustomUser.objects.get(username=request.user.username)
+        data = {
+            'username': user.username,
+            'role': user.role,
+            'city': user.city,
+            'street': user.street,
+            'pincode': user.pincode,
+            'state': user.state,
+        }
+        return Response(data)
+    except CustomUser.DoesNotExist:
+        return Response({'error': 'User not found'}, status=404)
+
+
+
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .models import CustomUser
+from .serializers import UserProfileUpdateSerializer
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])  # Ensure the user is authenticated
+def update_user_profile(request):
+    try:
+        user = CustomUser.objects.get(username=request.user.username)
+    except CustomUser.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = UserProfileUpdateSerializer(user, data=request.data, partial=True)  # partial=True allows partial updates
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    else:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .models import Category
+from .serializers import CategorySerializer
+
+@api_view(['POST'])
+def create_category(request):
+    if request.method == 'POST':
+        serializer = CategorySerializer(data=request.data)
+        
+        # Check if the submitted data is valid
+        if serializer.is_valid():
+            serializer.save()  # Save the category to the database
+            return Response(serializer.data, status=status.HTTP_201_CREATED)  # Return created category data
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  # Return validation errors if any
+
+
+
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from .models import Category, Product
+from .serializers import ProductSerializer, CategorySerializer
+
+@api_view(['GET'])
+def products_by_category(request):
+    categories = Category.objects.all()[:3]  # Fetch only 3 categories
+    category_data = {}
+
+    for category in categories:
+        product = Product.objects.filter(category=category).first()  # Get only 1 product per category
+        if product:
+            category_data[category.name] = ProductSerializer(product).data  # Serialize product
+
+    return Response(category_data)
 
