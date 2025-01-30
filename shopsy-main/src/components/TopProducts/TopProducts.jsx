@@ -4,6 +4,7 @@ import Img2 from "../../assets/shirt/shirt2.png";
 import Img3 from "../../assets/shirt/shirt3.png";
 import { FaStar } from "react-icons/fa";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 // const ProductsData = [
 //   {
@@ -38,6 +39,12 @@ const TopProducts = ({ handleOrderPopup }) => {
   const [categories, setCategories] = useState({});
   const [loading, setLoading] = useState(true);
   const BASE_URL = "http://127.0.0.1:8000"; 
+
+  const navigate = useNavigate();
+
+  const handleProductClick = (id) => {
+    navigate(`/ProductDetails/${id}`); // Navigate to the ProductDetails page
+  };
 
   useEffect(() => {
     axios.get("http://127.0.0.1:8000/api/products-by-category/")
@@ -147,6 +154,7 @@ const TopProducts = ({ handleOrderPopup }) => {
                 src={`${BASE_URL}${product.image}`}
                 alt={product?.name || "Product Image"}
                 className="max-w-[140px] block mx-auto transform -translate-y-20 group-hover:scale-105 duration-300 drop-shadow-md"
+                onClick={() => handleProductClick(product.id)}
               />
             </div>
 

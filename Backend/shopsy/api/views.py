@@ -406,3 +406,19 @@ def products_by_category(request):
 
     return Response(category_data)
 
+
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from .models import Product
+from .serializers import ProductSerializer
+
+@api_view(['GET'])
+def search_products(request):
+    query = request.GET.get('q', '')
+    if query:
+        products = Product.objects.filter(name__icontains=query)  # Case-insensitive search
+    else:
+        products = Product.objects.all()
+
+    serializer = ProductSerializer(products, many=True)
+    return Response(serializer.data)

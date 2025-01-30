@@ -1,10 +1,12 @@
-import React from "react";
+import React  from "react";
 import Logo from "../../assets/logo.png";
 import { IoMdSearch } from "react-icons/io";
 import { FaCartShopping } from "react-icons/fa6";
 import { FaCaretDown } from "react-icons/fa";
 import DarkMode from "./DarkMode";
 import { Link } from "react-router-dom";
+import { useState,useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Menu = [
   {
@@ -58,6 +60,28 @@ const DropdownLinks = [
 ];
 
 const Navbar = ({ handleOrderPopup }) => {
+
+  const [query, setQuery] = useState("");
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    // Check auth status when the component mounts
+    const token = localStorage.getItem("accessToken");
+    setIsAuthenticated(token !== null && token !== undefined && token !== "");
+  }, []);
+
+  
+  const handleLogout = () => {
+    localStorage.removeItem("token"); // Remove token from localStorage
+    navigate("/login"); // Redirect to login page
+  };
+
+  const handleSearch = () => {
+    if (query.trim() !== "") {
+      navigate(`/Result?q=${encodeURIComponent(query)}`);
+    }
+  };
   return (
     <div className="shadow-md bg-white dark:bg-gray-900 dark:text-white duration-200 relative z-40">
       {/* upper Navbar */}
@@ -71,15 +95,20 @@ const Navbar = ({ handleOrderPopup }) => {
           </div>
 
           {/* search bar */}
-          <div className="flex justify-between items-center gap-4">
+         
+
+<div className="flex justify-between items-center gap-4">
             <div className="relative group hidden sm:block">
               <input
                 type="text"
                 placeholder="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
                 className="w-[200px] sm:w-[200px] group-hover:w-[300px] transition-all duration-300 rounded-full border border-gray-300 px-2 py-1 focus:outline-none focus:border-1 focus:border-primary dark:border-gray-500 dark:bg-gray-800  "
               />
-              <IoMdSearch className="text-gray-500 group-hover:text-primary absolute top-1/2 -translate-y-1/2 right-3" />
+              <IoMdSearch className="text-gray-500 group-hover:text-primary absolute top-1/2 -translate-y-1/2 right-3"  onClick={handleSearch} />
             </div>
+
 
             {/* order button */}
             <Link to="/Cart">
@@ -93,8 +122,8 @@ const Navbar = ({ handleOrderPopup }) => {
               <FaCartShopping className="text-xl text-white drop-shadow-sm cursor-pointer" />
             </button>
             </Link>
-
-            <Link to="/Login">
+              {/* Login  functionality */}
+            {/* <Link to="/Login">
             <button
               className="bg-gradient-to-r from-primary to-secondary transition-all duration-200 text-white  py-1 px-4 rounded-full flex items-center gap-3 group"
             >
@@ -103,7 +132,27 @@ const Navbar = ({ handleOrderPopup }) => {
              
               
             </button>
-            </Link>
+            </Link> */}
+
+{isAuthenticated && (
+        <button
+          onClick={handleLogout}
+          className="bg-gradient-to-r from-primary to-secondary transition-all duration-200 text-white py-1 px-4 rounded-full flex items-center gap-3 group"
+        >
+          Logout
+        </button>
+         )}
+    
+        <Link to="/login">
+          <button className="bg-gradient-to-r from-primary to-secondary transition-all duration-200 text-white py-1 px-4 rounded-full flex items-center gap-3 group">
+            Login
+          </button>
+        </Link>
+      
+
+
+
+
             {/* Darkmode Switch */}
             <div>
               <DarkMode />

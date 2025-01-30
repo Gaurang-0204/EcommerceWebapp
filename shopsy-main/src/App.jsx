@@ -23,6 +23,7 @@ import CartPage from "./components/Cart/CartPage";
 import CheckoutPage from "./components/Cart/Checkoutpage";
 import ProfilePage from "./components/Profile/ProfilePage";
 import EditProfile from "./components/Profile/EditProfile";
+import ResultPage from "./components/ResultPage/ResultPage";
 const App = () => {
   const [orderPopup, setOrderPopup] = React.useState(false);
 
@@ -55,6 +56,7 @@ const App = () => {
         <Route path="/Checkout" element={<CheckoutPage />} />
         <Route path="/ProfilePage" element={<ProfilePage />} />
         <Route path="/EditProfile" element={<EditProfile />} />
+        <Route path="/Result" element={<ResultPage />} />
         </Routes>
       </Router>
     </div>
