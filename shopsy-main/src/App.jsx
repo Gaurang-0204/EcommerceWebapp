@@ -24,7 +24,7 @@ import CheckoutPage from "./components/Cart/Checkoutpage";
 import ProfilePage from "./components/Profile/ProfilePage";
 import EditProfile from "./components/Profile/EditProfile";
 import ResultPage from "./components/ResultPage/ResultPage";
-import LoveButton from "./components/lovepage";
+
 const App = () => {
   const [orderPopup, setOrderPopup] = React.useState(false);
 
@@ -58,7 +58,7 @@ const App = () => {
         <Route path="/ProfilePage" element={<ProfilePage />} />
         <Route path="/EditProfile" element={<EditProfile />} />
         <Route path="/Result" element={<ResultPage />} />
-        <Route path="/Love" element={<LoveButton />} />
+        
         </Routes>
       </Router>
     </div>
