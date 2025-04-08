@@ -309,7 +309,9 @@ const CheckoutPage = () => {
       return;
     }
   
-    const totalPrice = orderItems.reduce((total, item) => total + item.price * item.quantity, 0);
+    const totalPrice = orderItems
+  .reduce((total, item) => total + item.price * item.quantity, 0)
+  .toFixed(2);
   
     const orderData = {
       items: JSON.stringify(orderItems),

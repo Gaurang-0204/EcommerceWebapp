@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import Navbar from "../Navbar/Navbar";
+import { useNavigate } from "react-router-dom";
 
 const ProductDetails = () => {
   const { id } = useParams(); // Extract the product ID from the URL
@@ -12,6 +13,7 @@ const ProductDetails = () => {
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
   const [quantity, setQuantity] = useState(1); // Default quantity is 1
+  const navigate = useNavigate();
 
   const BASE_URL = "http://127.0.0.1:8000"; // Base URL for the API
 
@@ -31,7 +33,7 @@ const ProductDetails = () => {
 
   const handleAddToCart = () => {
     // Ensure size and color are selected
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
 
     if (!token) {
       // If the user is not logged in, redirect to login
