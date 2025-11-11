@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-s+f!cr4meb4qccnu8v1h74(%oi-l!#c#0ax$fo8_w#1q()-xs=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'api',
+    'django_filters',
+    'inventory',
     'corsheaders',
 ]
 
@@ -135,15 +137,37 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 CORS_ALLOW_ALL_ORIGINS = True
 
+
+
+
+CORS_ALLOW_CREDENTIALS = True
+
+# REST Framework Configuration
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    'DEFAULT_PAGINATION_CLASS': 'inventory.pagination.StandardPagination',
+    'PAGE_SIZE': 12,
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+    ],
+}
+
+# Cache configuration for inventory data
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'inventory-cache',
+        'TIMEOUT': 300,  # 5 minutes
+        'OPTIONS': {
+            'MAX_ENTRIES': 10000
+        }
+    }
 }
 
 from datetime import timedelta
@@ -156,5 +180,13 @@ SIMPLE_JWT = {
 
 AUTH_USER_MODEL = 'api.CustomUser'
 
+# Streaming response settings for SSE
+# Important for Nginx to not buffer SSE responses
+if not DEBUG:
+    # Production settings
+    WSGI_APPLICATION = 'config.wsgi.application'
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 

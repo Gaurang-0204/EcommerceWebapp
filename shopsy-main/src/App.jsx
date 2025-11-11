@@ -21,6 +21,8 @@ import ProfilePage from "./components/Profile/ProfilePage";
 import EditProfile from "./components/Profile/EditProfile";
 import ResultPage from "./components/ResultPage/ResultPage";
 import Products from "./components/Products/Products";
+// NEW: Import Inventory Provider
+import { InventoryProvider } from './contexts/InventoryContext';
 
 
 const App = () => {
@@ -42,6 +44,7 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <InventoryProvider>
       <Router>
         <Routes>
           <Route path="/Admin" element={<Admin />} />
@@ -63,6 +66,7 @@ const App = () => {
       {process.env.NODE_ENV === 'development' && (
         <ReactQueryDevtools initialIsOpen={false} />
       )}
+      </InventoryProvider>
     </QueryClientProvider>
   );
 };

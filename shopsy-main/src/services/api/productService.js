@@ -81,51 +81,45 @@ export const ProductService = {
    * @returns {Promise<Object>} Products data
    */
   async getProducts(options = {}) {
-    const {
-      page = 1,
-      limit = parseInt(import.meta.env.REACT_APP_PRODUCTS_PER_PAGE) || 12,
+  const {
+    page = 1,
+    limit = parseInt(import.meta.env.REACT_APP_PRODUCTS_PER_PAGE) || 12,
+    signal,
+  } = options;
+
+  const startTime = performance.now();
+
+  try {
+    const response = await apiClient.get('/api/v1/products/', {
+      params: { page, limit },
       signal,
-    } = options;
+    });
 
-    const startTime = performance.now();
+    const { results = [], count = 0, next, previous } = response.data;
 
-    try {
-      const response = await apiClient.get('/api/products/', {
-        params: { page, limit },
-        signal,
-      });
+    const fetchTime = performance.now() - startTime;
 
-      const fetchTime = performance.now() - startTime;
-
-      if (DEBUG_LOGS) {
-        console.log(`✅ [ProductService] Fetched ${response.data.length} products in ${fetchTime.toFixed(2)}ms`);
-      }
-
-      return {
-        products: response.data,
-        total: response.data.length,
-        page,
-        limit,
-        hasMore: response.data.length === limit,
-      };
-    } catch (error) {
-      const fetchTime = performance.now() - startTime;
-
-      if (error.name === 'CanceledError' || error.name === 'AbortError') {
-        if (DEBUG_LOGS) {
-          console.log(`🚫 [ProductService] Request canceled after ${fetchTime.toFixed(2)}ms`);
-        }
-        throw error;
-      }
-
-      if (DEBUG_LOGS) {
-        console.error(`❌ [ProductService] Error after ${fetchTime.toFixed(2)}ms:`, error.message);
-      }
-
-      throw error;
+    if (DEBUG_LOGS) {
+      console.log(`✅ [ProductService] Fetched ${results.length} products in ${fetchTime.toFixed(2)}ms`);
     }
-  },
 
+    return {
+      products: results,
+      total: count,
+      page,
+      limit,
+      hasMore: Boolean(next),
+      next,
+      previous,
+    };
+  } catch (error) {
+    const fetchTime = performance.now() - startTime;
+    if (DEBUG_LOGS) {
+      console.error(`❌ [ProductService] Error after ${fetchTime.toFixed(2)}ms:`, error.message);
+    }
+    throw error;
+  }
+},
   /**
    * Fetch a single product by ID
    * @param {string|number} productId - Product ID
@@ -133,7 +127,7 @@ export const ProductService = {
    * @returns {Promise<Object>} Product data
    */
   async getProductById(productId, signal) {
-    const response = await apiClient.get(`/api/products/${productId}/`, {
+    const response = await apiClient.get(`/api/v1/products/${productId}/`, {
       signal,
     });
     return response.data;
@@ -146,7 +140,7 @@ export const ProductService = {
    * @returns {Promise<Array>} Products matching search
    */
   async searchProducts(query, signal) {
-    const response = await apiClient.get('/api/products/search/', {
+    const response = await apiClient.get('/api/v1/products/search/', {
       params: { q: query },
       signal,
     });

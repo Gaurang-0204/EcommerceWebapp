@@ -20,7 +20,7 @@ const ProductDetails = () => {
   useEffect(() => {
     // Fetch product details by ID
     axios
-      .get(`${BASE_URL}/api/detail/${id}/`)
+      .get(`${BASE_URL}/api/v1/products/${id}/`)
       .then((response) => {
         setProduct(response.data);
         setLoading(false);

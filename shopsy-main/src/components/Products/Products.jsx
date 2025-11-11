@@ -60,6 +60,8 @@ import { useNavigate } from "react-router-dom";
 
 // React Query hook
 import { useProducts } from "../../hooks/useProducts";
+import { useInventory } from "../../contexts/InventoryContext";
+import { StockBadge, OutOfStockOverlay, LowStockWarning } from "../Inventory/StockBadge";
 
 // Import loading skeleton
 import { ProductsSkeleton } from "../Performance/LoadingSkeletons";
@@ -114,175 +116,141 @@ const BASE_URL = import.meta.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:800
  * @returns {JSX.Element} Products grid with loading/error states
  */
 const AllProducts = () => {
-  
- 
   const navigate = useNavigate();
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    refetch,
-    isFetching,
-  } = useProducts({
+  const { data, isLoading, isError, error, refetch, isFetching } = useProducts({
     page: 1,
-    // No limit specified - shows all products from API
-    // You can uncomment below to limit:
-    // limit: parseInt(process.env.REACT_APP_PRODUCTS_PER_PAGE) || 12,
   });
-
-
   
+  // NEW: Real-time inventory context
+  const { 
+    isOutOfStock, 
+    isLowStock, 
+    getInventoryStatus,
+    connectionStatus,
+    lowStockAlerts 
+  } = useInventory();
 
+  const products = data?.products || [];
 
-// Extract products from data
-const products = data?.products || [];
+  // =========================================================================
+  // REAL-TIME INVENTORY STATUS DISPLAY
+  // =========================================================================
 
+  const renderProductCard = (product, index) => {
+    const outOfStock = isOutOfStock(product.id);
+    const lowStock = isLowStock(product.id);
+    const quantity = lowStockAlerts[product.id];
 
+    return (
+      <div
+        key={product.id}
+        data-aos="fade-up"
+        data-aos-delay={Math.min(index * 50, 500)}
+        className="space-y-3"
+      >
+        {/* Out of Stock Overlay */}
+        <OutOfStockOverlay isOutOfStock={outOfStock}>
+          <div
+            onClick={() => !outOfStock && handleProductClick(product.id)}
+            className={`cursor-pointer rounded-md overflow-hidden transition-all duration-300 ${
+              outOfStock ? 'opacity-60 cursor-not-allowed' : 'hover:scale-105'
+            }`}
+          >
+            <img
+              src={product.image}
+              alt={product.name}
+              className="h-[220px] w-[150px] object-cover"
+              loading="lazy"
+            />
+          </div>
+        </OutOfStockOverlay>
 
-   // ---------------------------------------------------------------------------
-  // LIFECYCLE EFFECTS
-  // ---------------------------------------------------------------------------
+        {/* Low Stock Warning */}
+        <LowStockWarning isLowStock={lowStock} quantity={quantity} />
 
+        {/* Stock Badge */}
+        <StockBadge 
+          productId={product.id} 
+          productName={product.name}
+          className="w-full justify-center"
+        />
 
-  /**
-   * Initialize AOS animations
-   * Runs once on component mount
-   */
-  useEffect(() => {
-    if (DEBUG_LOGS) {
-      console.log('⚡ [PRODUCTS] Component mounted, initializing AOS...');
-    }
+        {/* Product Details */}
+        <div className="pointer-events-none">
+          <h3 className="font-semibold truncate" title={product.name}>
+            {product.name}
+          </h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            {product.color}
+          </p>
+          <div className="flex items-center gap-1">
+            <FaDollarSign className="text-primary" />
+            <span className="font-bold">{product.price}</span>
+          </div>
+        </div>
 
+        {/* Add to Cart Button - Disabled if out of stock */}
+        <button
+          onClick={() => handleAddToCart(product.id)}
+          disabled={outOfStock}
+          className={`w-full py-2 rounded-md font-semibold transition-all ${
+            outOfStock
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : 'bg-primary text-white hover:bg-primary-dark'
+          }`}
+        >
+          {outOfStock ? 'Out of Stock' : 'Add to Cart'}
+        </button>
+      </div>
+    );
+  };
 
-    AOS.init({
-      offset: 100,
-      duration: 800,
-      easing: "ease-in-sine",
-      delay: 100,
-    });
-
-
-    if (DEBUG_LOGS) {
-      console.log('✅ [PRODUCTS] AOS initialized');
-    }
-  }, []);
-
-
-  /**
-   * Log data changes in development
-   */
-  useEffect(() => {
-    if (DEBUG_LOGS && products.length > 0) {
-      console.log(`📦 [PRODUCTS] Displaying ${products.length} products`);
-    }
-  }, [products]);
-
-
-
-  // ---------------------------------------------------------------------------
+  // =========================================================================
   // EVENT HANDLERS
-  // ---------------------------------------------------------------------------
+  // =========================================================================
 
-
-  /**
-   * Handle product card click
-   * Navigate to product details page
-   */
   const handleProductClick = (id) => {
-    if (DEBUG_LOGS) {
-      console.log(`🔍 [PRODUCTS] Navigating to product: ${id}`);
-    }
+    if (DEBUG_LOGS) console.log(`🔍 [PRODUCTS] Navigating to product: ${id}`);
     navigate(`/ProductDetails/${id}`);
   };
 
-
-  /**
-   * Handle retry button click
-   * Manually trigger refetch
-   */
-  const handleRetry = () => {
-    if (DEBUG_LOGS) {
-      console.log('🔄 [PRODUCTS] Manual retry triggered');
+  const handleAddToCart = (productId) => {
+    if (isOutOfStock(productId)) {
+      if (DEBUG_LOGS) console.log(`❌ [PRODUCTS] Cannot add out-of-stock item to cart`);
+      return;
     }
+    console.log(`🛒 [PRODUCTS] Added product ${productId} to cart`);
+    // Implement add to cart logic
+  };
+
+  const handleRetry = () => {
+    if (DEBUG_LOGS) console.log('🔄 [PRODUCTS] Manual retry triggered');
     refetch();
   };
 
+  // =========================================================================
+  // LOADING STATE
+  // =========================================================================
 
-
-
-  // ---------------------------------------------------------------------------
-  // RENDER LOGIC - LOADING STATE
-  // ---------------------------------------------------------------------------
-
-
-  /**
-   * Loading state with skeleton
-   * 
-   * CURRENT: ✅ Good implementation with custom skeleton component
-   * NOTE: This is already well optimized
-   */
-  if (isLoading) {  // Changed from: if (loading)
-    console.log('🎨 [PRODUCTS] Rendering ProductsSkeleton');
+  if (isLoading) {
     return <ProductsSkeleton />;
   }
 
-
-  // ---------------------------------------------------------------------------
-  // RENDER LOGIC - ERROR STATE
-  // ---------------------------------------------------------------------------
-
+  // =========================================================================
+  // ERROR STATE
+  // =========================================================================
 
   if (isError) {
-    if (DEBUG_LOGS) {
-      console.error('❌ [PRODUCTS] Rendering error state:', error);
-    }
-
-
-    // Determine error message
-    let errorMessage = 'An unexpected error occurred';
-    let errorSubtext = 'Please try again later';
-
-
-    if (error?.isNetworkError) {
-      errorMessage = 'Network Connection Failed';
-      errorSubtext = 'Please check your internet connection and try again';
-    } else if (error?.isTimeout) {
-      errorMessage = 'Request Timeout';
-      errorSubtext = 'The server took too long to respond. Please try again';
-    } else if (error?.status === 404) {
-      errorMessage = 'Products Not Found';
-      errorSubtext = 'The products endpoint could not be found';
-    } else if (error?.status >= 500) {
-      errorMessage = 'Server Error';
-      errorSubtext = 'Our servers are experiencing issues. Please try again later';
-    } else if (error?.message) {
-      errorSubtext = error.message;
-    }
-
-
     return (
       <div className="bg-white dark:bg-gray-900 dark:text-white min-h-screen flex items-center justify-center">
         <div className="text-center p-8 max-w-md">
           <div className="text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold mb-2">{errorMessage}</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">{errorSubtext}</p>
-          
-          {DEBUG_LOGS && error?.message && (
-            <details className="mb-6 text-left bg-gray-100 dark:bg-gray-800 p-4 rounded">
-              <summary className="cursor-pointer font-semibold text-sm">
-                Technical Details (Development Only)
-              </summary>
-              <pre className="mt-2 text-xs overflow-auto">
-                {JSON.stringify(error, null, 2)}
-              </pre>
-            </details>
-          )}
-          
+          <h2 className="text-2xl font-bold mb-2">Products Load Failed</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">Please try again</p>
           <button
             onClick={handleRetry}
             disabled={isFetching}
-            className="bg-primary text-white py-2 px-6 rounded-md hover:bg-primary-dark transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-primary text-white py-2 px-6 rounded-md hover:bg-primary-dark transition disabled:opacity-50"
           >
             {isFetching ? 'Retrying...' : 'Try Again'}
           </button>
@@ -291,18 +259,11 @@ const products = data?.products || [];
     );
   }
 
-
-   // ---------------------------------------------------------------------------
-  // RENDER LOGIC - EMPTY STATE
-  // ---------------------------------------------------------------------------
-
+  // =========================================================================
+  // EMPTY STATE
+  // =========================================================================
 
   if (products.length === 0) {
-    if (DEBUG_LOGS) {
-      console.log('📭 [PRODUCTS] No products found');
-    }
-
-
     return (
       <div className="bg-white dark:bg-gray-900 dark:text-white min-h-screen flex items-center justify-center">
         <div className="text-center p-8">
@@ -322,20 +283,29 @@ const products = data?.products || [];
     );
   }
 
-
-  if (DEBUG_LOGS) {
-    console.log('✅ [PRODUCTS] Rendering products grid');
-  }
-
-
-  // ---------------------------------------------------------------------------
-  // MAIN RENDER - PRODUCTS GRID
-  // ---------------------------------------------------------------------------
-
+  // =========================================================================
+  // MAIN RENDER
+  // =========================================================================
 
   return (
     <div className="bg-white dark:bg-gray-900 dark:text-white duration-200">
-      {/* Header Section */}
+      {/* Connection Status Indicator */}
+      <div className="text-center mb-4">
+        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${
+          connectionStatus === 'connected' 
+            ? 'bg-green-100 text-green-800' 
+            : connectionStatus === 'polling'
+            ? 'bg-blue-100 text-blue-800'
+            : 'bg-gray-100 text-gray-800'
+        }`}>
+          <span className={`inline-block w-2 h-2 rounded-full ${
+            connectionStatus === 'connected' ? 'bg-green-600' : 'bg-gray-600'
+          }`}></span>
+          Real-time {connectionStatus === 'connected' ? 'Connected' : connectionStatus === 'polling' ? 'Polling' : 'Disconnected'}
+        </div>
+      </div>
+
+      {/* Header */}
       <div className="text-center mb-10 max-w-[600px] mx-auto mt-10">
         <h1 data-aos="fade-up" className="text-3xl font-bold">
           Our Products
@@ -345,57 +315,19 @@ const products = data?.products || [];
         </p>
       </div>
 
-
-      {/* Background refetch indicator */}
+      {/* Refetch Indicator */}
       {isFetching && !isLoading && (
         <div className="fixed top-4 right-4 bg-primary text-white px-4 py-2 rounded-md shadow-lg z-50 animate-pulse">
           Updating products...
         </div>
       )}
 
-
       {/* Products Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 place-items-center gap-5 px-4">
-        {products.map((product, index) => (
-          <div
-            key={product.id}
-            data-aos="fade-up"
-            data-aos-delay={Math.min(index * 50, 500)} // Stagger animations
-            className="space-y-3 cursor-pointer hover:scale-105 transition-transform duration-300"
-            onClick={() => handleProductClick(product.id)}
-          >
-            {/* Product Image */}
-            <img
-              src={`${BASE_URL}${product.image}`}
-              alt={product.name}
-              className="h-[220px] w-[150px] object-cover rounded-md"
-              loading="lazy"
-            />
-
-
-            {/* Product Details */}
-            <div>
-              <h3 className="font-semibold truncate" title={product.name}>
-                {product.name}
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {product.color}
-              </p>
-              <div className="flex items-center gap-1">
-                <FaDollarSign className="text-primary" />
-                <span className="font-bold">{product.price}</span>
-              </div>
-            </div>
-          </div>
-        ))}
+        {products.map((product, index) => renderProductCard(product, index))}
       </div>
 
-
-      {/* View All Products Button */}
-      {/* 
-        TODO Phase 2: Replace with pagination or infinite scroll
-        Currently shows all products, so this button might be redundant
-      */}
+      {/* View All Button */}
       <div className="flex justify-center mt-10 mb-4">
         <Link to="/Allproducts">
           <button className="text-center cursor-pointer bg-primary text-white py-2 px-6 rounded-md hover:bg-primary-dark transition-colors duration-300">
@@ -403,24 +335,10 @@ const products = data?.products || [];
           </button>
         </Link>
       </div>
-
-
-      {/* React Query Cache Info (Development Only) */}
-      {DEBUG_LOGS && (
-        <div className="fixed bottom-4 right-4 bg-black bg-opacity-75 text-white text-xs p-3 rounded z-50 max-w-xs">
-          <div className="font-bold mb-1">React Query Status:</div>
-          <div>Products: {products.length}</div>
-          <div>Loading: {isLoading ? 'Yes' : 'No'}</div>
-          <div>Fetching: {isFetching ? 'Yes' : 'No'}</div>
-          <div>Cached: {!isLoading && !isFetching ? 'Yes' : 'No'}</div>
-        </div>
-      )}
     </div>
   );
 };
 
-
-// Export with memoization
 export default React.memo(AllProducts);
 
 // =============================================================================

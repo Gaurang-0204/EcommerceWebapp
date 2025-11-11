@@ -41,6 +41,7 @@ import Subscribe from "../Subscribe/Subscribe";
 import Testimonials from "../Testimonials/Testimonials";
 import Footer from "../Footer/Footer";
 import Popup from "../Popup/Popup";
+import HorizontalProductCarousel from '../Carousel/HorizontalProductCarousel';
 
 // ============================================================================
 // PERFORMANCE WRAPPERS
@@ -560,7 +561,13 @@ const Home = () => {
         */}
         {/* ================================================================= */}
         
-        <MemoizedProducts />
+        {/* Trending Products Carousel */}
+      <HorizontalProductCarousel
+        title="Trending Now 🔥"
+        limit={20}
+        autoScroll={true}
+        autoScrollInterval={6000}
+      />
         
         {/* ================================================================= */}
         {/* TOP PRODUCTS SECTION */}
