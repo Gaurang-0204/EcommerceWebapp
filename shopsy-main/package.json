@@ -19,12 +19,14 @@
     "@tanstack/react-query": "^5.90.7",
     "aos": "^2.3.4",
     "axios": "^1.7.9",
+    "classnames": "^2.5.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^4.12.0",
     "react-router-dom": "^7.1.3",
     "react-slick": "^0.29.0",
     "slick-carousel": "^1.8.1",
+    "use-debounce": "^10.0.6",
     "web-vitals": "^5.1.0"
   },
   "devDependencies": {

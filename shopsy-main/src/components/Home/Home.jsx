@@ -591,10 +591,13 @@ const Home = () => {
         */}
         {/* ================================================================= */}
         
-        {/* Top Products Section */}
-          <Suspense fallback={<ProductsSkeleton />}>
-            <LazyTopProducts handleOrderPopup={handleOrderPopup} />
-          </Suspense>
+        {/* Trending Products Carousel */}
+      <HorizontalProductCarousel
+        title="Top Products 🔥"
+        limit={20}
+        autoScroll={true}
+        autoScrollInterval={6000}
+      />
         
         {/* ================================================================= */}
         {/* AI RECOMMENDATIONS SECTION - NEW FEATURE */}

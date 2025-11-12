@@ -194,7 +194,7 @@ const HorizontalProductCarousel = ({
 
         {/* View All Button */}
       <div className="flex justify-center mt-10 mb-4">
-        <Link to="/Allproducts">
+        <Link to="/products">
           <button className="text-center cursor-pointer bg-primary text-white py-2 px-6 rounded-md hover:bg-primary-dark transition-colors duration-300">
             View All Products
           </button>

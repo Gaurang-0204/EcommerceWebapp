@@ -33,15 +33,7 @@ const CarouselNavigation = ({
         <FaChevronRight />
       </button>
 
-      {/* Scroll Progress Indicator */}
-      {scrollProgress > 0 && scrollProgress < 100 && (
-        <div className="scroll-progress-bar">
-          <div 
-            className="scroll-progress-fill"
-            style={{ width: `${scrollProgress}%` }}
-          />
-        </div>
-      )}
+      
     </>
   );
 };
