@@ -6,9 +6,44 @@ from .models import UserSession, LoginAttempt
 User = get_user_model()
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    """Custom JWT token serializer with additional user data"""
+    """Custom JWT token serializer with email/username login support"""
+
+    # Override to make username not required by default
+    username = serializers.CharField(required=False)
+    email = serializers.EmailField(required=False)
+    
+    # Override this to prevent parent class from requiring username
+    default_error_messages = {
+        'no_active_account': 'Invalid credentials'
+    }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Make username field optional
+        self.fields['username'].required = False
+        self.fields['username'].allow_blank = True
     
     def validate(self, attrs):
+        # Get credentials
+        email = attrs.get('email')
+        username = attrs.get('username')
+        password = attrs.get('password')
+        
+        # Validate that at least one identifier is provided
+        if not email and not username:
+            raise serializers.ValidationError('Either email or username is required')
+        
+        # If email is provided, convert to username
+        if email:
+            try:
+                user = User.objects.get(email=email)
+                # Set username for parent validation
+                attrs['username'] = user.username
+            except User.DoesNotExist:
+                raise serializers.ValidationError('Invalid email or password')
+        
+        # Now username is guaranteed to be in attrs
+        # Call parent validation
         data = super().validate(attrs)
         
         # Add user data to response

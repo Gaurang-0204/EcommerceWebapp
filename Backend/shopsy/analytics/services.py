@@ -25,7 +25,14 @@ class AnalyticsService:
             user_agent = request.META.get('HTTP_USER_AGENT', '') if request else ''
             page_url = request.build_absolute_uri() if request else ''
             referrer = request.META.get('HTTP_REFERER', '') if request else ''
-            session_id = request.session.session_key if request and hasattr(request, 'session') else ''
+            # FIX 1: Ensure session_id is never empty
+            session_id = ''
+            if request and hasattr(request, 'session'):
+                session_id = request.session.session_key or ''
+            
+            # Set default if empty or None
+            if not session_id:
+                session_id = 'unknown'
             
             event = AnalyticsEvent.objects.create(
                 user_id=user_id,

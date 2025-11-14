@@ -41,8 +41,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
-    'api',
+    # 'api',
     'users',
+    'analytics',
     'django_filters',
     'inventory',
     'corsheaders',
@@ -186,7 +187,7 @@ SIMPLE_JWT = {
 }
 # settings.pyAllowAny
 
-AUTH_USER_MODEL = 'api.CustomUser'
+AUTH_USER_MODEL = 'users.CustomUser'
 
 # Streaming response settings for SSE
 # Important for Nginx to not buffer SSE responses
