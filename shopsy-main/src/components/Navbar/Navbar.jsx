@@ -37,11 +37,14 @@ import React from "react";
 import Logo from "../../assets/logo.png";
 import { IoMdSearch } from "react-icons/io";
 import { FaCartShopping } from "react-icons/fa6";
+import { GiHamburgerMenu } from 'react-icons/gi'
 import { FaCaretDown } from "react-icons/fa";
+import { IoClose } from 'react-icons/io5';
 import DarkMode from "./DarkMode";
-import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link ,useNavigate} from "react-router-dom";
+import { useState, useEffect, useCallback, memo } from "react";
+import { useAuth } from '../../contexts/AuthContext.jsx';
+import AnalyticsService from '../../services/AnalyticsService';
 
 
 const Menu = [
@@ -61,17 +64,17 @@ const Menu = [
     link: "/#",
   },
   {
-    id: 3, // ❌ BUG: Duplicate ID
+    id: 4, // ❌ BUG: Duplicate ID
     name: "Mens Wear",
     link: "/#",
   },
   {
-    id: 3, // ❌ BUG: Duplicate ID
+    id: 5, // ❌ BUG: Duplicate ID
     name: "Electronics",
     link: "/#",
   },
   {
-    id: 4,
+    id: 6,
     name: "Admin",
     link: "/Admin",
   },
@@ -118,86 +121,67 @@ const DropdownLinks = [
  * @param {Function} props.handleOrderPopup - Callback to open order popup modal
  * @returns {JSX.Element} Navbar component
  */
-const Navbar = ({ handleOrderPopup }) => {
+const Navbar = memo(({ handleOrderPopup = () => {} }) => {
   // ---------------------------------------------------------------------------
   // STATE MANAGEMENT
   // ---------------------------------------------------------------------------
-
-  
-  const [query, setQuery] = useState("");
-
-  /**
-   * React Router navigation hook
-   * 
-   * TODO: Add navigation tracking
-   * OPTIMIZATION: Track all programmatic navigations for analytics
-   * 
-   * @type {Function}
-   */
+  const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
+  const [query, setQuery] = useState("");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
 
-  
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  // ---------------------------------------------------------------------------
-  // TODO: ADD ADVANCED FEATURE STATE
-  // ---------------------------------------------------------------------------
-
-  // TODO: Cart count state (from WebSocket)
-  // const [cartCount, setCartCount] = useState(0)
-  // const { isConnected, subscribe } = useWebSocket()
-
-  // TODO: Search suggestions state
-  // const [searchSuggestions, setSearchSuggestions] = useState([])
-  // const [showSuggestions, setShowSuggestions] = useState(false)
-
-  // TODO: Notifications state
-  // const [notifications, setNotifications] = useState([])
-  // const [unreadCount, setUnreadCount] = useState(0)
-
-  // TODO: Trending menu items (dynamic)
-  // const [trendingProducts, setTrendingProducts] = useState(DropdownLinks)
-
-  // TODO: Analytics tracking
-  // const { trackEvent } = useAnalytics()
-
-  // ---------------------------------------------------------------------------
-  // LIFECYCLE EFFECTS
-  // ---------------------------------------------------------------------------
-
-  
-  useEffect(() => {
-    // Check auth status when the component mounts
-    const token = localStorage.getItem("accessToken");
-    setIsAuthenticated(token !== null && token !== undefined && token !== "");
-  }, []);
-
-  // ---------------------------------------------------------------------------
-  // TODO: ADD ADVANCED FEATURE EFFECTS
-  // ---------------------------------------------------------------------------
-
- 
 
   // ---------------------------------------------------------------------------
   // EVENT HANDLERS
   // ---------------------------------------------------------------------------
 
+  
+  // Load cart count on mount
+  useEffect(() => {
+    const count = localStorage.getItem('cartCount') || 0;
+    setCartCount(Number(count));
+
+    // Track page view
+    AnalyticsService.trackPageView('navbar');
+  }, []);
+
+    // Handle search
+  const handleSearch = useCallback(() => {
+    if (query.trim() === '') return;
+
+    AnalyticsService.trackSearch(query, 0);
+    navigate(`/search?q=${encodeURIComponent(query)}`);
+    setQuery('');
+    setIsMobileMenuOpen(false);
+  }, [query, navigate]);
+
+  // Handle logout
+  const handleLogout = useCallback(async () => {
+    const result = await logout();
+    if (result.success) {
+      navigate('/login');
+    }
+  }, [logout, navigate]);
+
+  // Handle menu click
+  const handleMenuClick = useCallback((menuName) => {
+    AnalyticsService.trackMenuClick(menuName);
+    setIsMobileMenuOpen(false);
+  }, []);
+
+  // Handle cart click
+  const handleCartClick = useCallback(() => {
+    AnalyticsService.trackEvent('cart_opened');
+    handleOrderPopup();
+  }, [handleOrderPopup]);
+  
+
  
-  const handleLogout = () => {
-    localStorage.removeItem("token"); // Remove token from localStorage
-    navigate("/login"); // Redirect to login page
-  };
 
   
-  const handleSearch = () => {
-    if (query.trim() !== "") {
-      navigate(`/Result?q=${encodeURIComponent(query)}`);
-    }
-  };
+ 
 
-  // ---------------------------------------------------------------------------
-  // TODO: ADD ADVANCED EVENT HANDLERS
-  // ---------------------------------------------------------------------------
 
   
 
@@ -207,78 +191,118 @@ const Navbar = ({ handleOrderPopup }) => {
 
   return (
     <div className="shadow-md bg-white dark:bg-gray-900 dark:text-white duration-200 relative z-40">
-      
+      {/* Top Navbar */}
       <div className="bg-primary/40 py-2">
         <div className="container flex justify-between items-center">
           
           
           <div>
-            <a href="#" className="font-bold text-2xl sm:text-3xl flex gap-2">
+            {/* Logo */}
+            <Link to="/" className="font-bold text-2xl sm:text-3xl flex gap-2">
               <img src={Logo} alt="Logo" className="w-10" />
-              Shopsy
-            </a>
+              <span>Shopsy</span>
+            </Link>
           </div>
 
           {/* =============================================================== */}
           {/* SEARCH BAR & ACTION BUTTONS */}
           {/* =============================================================== */}
-
+          
+          {/* Search & Actions */}
           <div className="flex justify-between items-center gap-4">
-            
+            {/* Desktop Search */}
             
             <div className="relative group hidden sm:block">
+
               <input
                 type="text"
                 placeholder="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 className="w-[200px] sm:w-[200px] group-hover:w-[300px] transition-all duration-300 rounded-full border border-gray-300 px-2 py-1 focus:outline-none focus:border-1 focus:border-primary dark:border-gray-500 dark:bg-gray-800  "
               />
               <IoMdSearch
-                className="text-gray-500 group-hover:text-primary absolute top-1/2 -translate-y-1/2 right-3"
+                className="text-gray-500 group-hover:text-primary absolute top-1/2 -translate-y-1/2 right-3 cursor-pointer"
                 onClick={handleSearch}
               />
             </div>
 
-            
+            {/* Cart Button with Badge */}
             <Link to="/Cart">
               <button
-                onClick={() => handleOrderPopup()}
-                className="bg-gradient-to-r from-primary to-secondary transition-all duration-200 text-white  py-1 px-4 rounded-full flex items-center gap-3 group"
+                onClick={handleCartClick}
+                className="bg-gradient-to-r from-primary to-secondary transition-all duration-200 text-white  py-1 px-4 rounded-full flex items-center gap-3 relative"
               >
                 <span className="group-hover:block hidden transition-all duration-200">
                   Cart
                 </span>
-                <FaCartShopping className="text-xl text-white drop-shadow-sm cursor-pointer" />
+                <div className="relative">
+                  <FaCartShopping className="text-xl" />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                      {cartCount > 99 ? '99+' : cartCount}
+                    </span>
+                  )}
+                </div>
               </button>
             </Link>
 
-            
-            {isAuthenticated && (
-              <button
-                onClick={handleLogout}
-                className="bg-gradient-to-r from-primary to-secondary transition-all duration-200 text-white py-1 px-4 rounded-full flex items-center gap-3 group"
-              >
-                Logout
-              </button>
+            {/* Auth Buttons */}
+            {isAuthenticated ? (
+              <div className="flex items-center gap-2">
+                <span className="text-sm hidden sm:inline">{user?.username}</span>
+                <button
+                  onClick={handleLogout}
+                  className="bg-gradient-to-r from-primary to-secondary text-white py-1 px-4 rounded-full"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <Link to="/login">
+                <button className="bg-gradient-to-r from-primary to-secondary text-white py-1 px-4 rounded-full">
+                  Login
+                </button>
+              </Link>
             )}
 
-            <Link to="/login">
-              <button className="bg-gradient-to-r from-primary to-secondary transition-all duration-200 text-white py-1 px-4 rounded-full flex items-center gap-3 group">
-                Login
-              </button>
-            </Link>
+            
 
             
             <div>
               <DarkMode />
             </div>
+
+            {/* Mobile Menu Toggle */}
+            <button
+              className="sm:hidden text-2xl"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <IoClose /> : <GiHamburgerMenu />}
+            </button>
           </div>
         </div>
       </div>
 
+      {/* Desktop Menu */}
+      <div className="hidden sm:flex justify-center bg-gray-100 dark:bg-gray-800 py-2">
+        <ul className="flex items-center gap-4">
+          {Menu.map((item) => (
+            <li key={item.id}>
+              <Link
+                to={item.link}
+                onClick={() => handleMenuClick(item.name)}
+                className="px-4 hover:text-primary transition-colors"
+              >
+                {item.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
       
-      <div data-aos="zoom-in" className="flex justify-center">
+      {/* <div data-aos="zoom-in" className="flex justify-center">
         <ul className="sm:flex hidden items-center gap-4">
           
           {Menu.map((data) => (
@@ -316,11 +340,46 @@ const Navbar = ({ handleOrderPopup }) => {
             </div>
           </li>
         </ul>
-      </div>
+      </div> */}
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="sm:hidden bg-white dark:bg-gray-800">
+          <div className="p-4 border-b">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                className="w-full rounded-full border px-2 py-1 dark:bg-gray-700"
+              />
+              <IoMdSearch
+                className="absolute top-1/2 -translate-y-1/2 right-3 cursor-pointer"
+                onClick={handleSearch}
+              />
+            </div>
+          </div>
+          <ul className="flex flex-col">
+            {Menu.map((item) => (
+              <li key={item.id} className="border-b">
+                <Link
+                  to={item.link}
+                  onClick={() => handleMenuClick(item.name)}
+                  className="block px-4 py-3 hover:bg-primary/10"
+                >
+                  {item.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    
     </div>
   );
-};
-
+});
+Navbar.displayName = 'Navbar';
 export default Navbar;
 
 // =============================================================================

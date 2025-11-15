@@ -21,12 +21,22 @@ import ProfilePage from "./components/Profile/ProfilePage";
 import EditProfile from "./components/Profile/EditProfile";
 import ResultPage from "./components/ResultPage/ResultPage";
 import Products from "./components/Products/Products";
+import { AuthProvider, useAuth } from './contexts/AuthContext.jsx';
 // NEW: Import Inventory Provider
 import { InventoryProvider } from './contexts/InventoryContext';
+import { useEffect } from "react";
+import AnalyticsService from './services/AnalyticsService';
 
 
 const App = () => {
   const [orderPopup, setOrderPopup] = React.useState(false);
+
+
+  useEffect(() => {
+    // Track page view on route change
+    AnalyticsService.trackPageView(window.location.pathname);
+  }, []);
+
 
   const handleOrderPopup = () => {
     setOrderPopup(!orderPopup);
@@ -44,6 +54,8 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+
       <InventoryProvider>
       <Router>
         <Routes>
@@ -67,6 +79,7 @@ const App = () => {
         <ReactQueryDevtools initialIsOpen={false} />
       )}
       </InventoryProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 };

@@ -1,196 +1,41 @@
-// import React, { useState } from "react";
-// import axios from "axios";
-// import { useNavigate } from "react-router-dom";
-
-// const Login = () => {
-//     const [username, setusername] = useState("");
-// const [password, setPassword] = useState("");
-// const [error, setError] = useState("");
-// const navigate = useNavigate();
-
-// const handleLogin = async (e) => {
-//   e.preventDefault();
-//   try {
-//     const response = await axios.post("http://127.0.0.1:8000/api/login/", {
-//         username,
-//         password,
-//       }, {
-//         headers: {
-//           'Content-Type': 'application/json',
-//         }
-//       });
-
-//     // Destructure tokens and role from the response data
-//     const { access, refresh } = response.data.tokens;
-//     const userRole = response.data.user.role;
-
-//     // Save tokens and user role to local storage
-//     localStorage.setItem("accessToken", access);
-//     localStorage.setItem("refreshToken", refresh);
-//     localStorage.setItem("userRole", userRole);
-
-//     // Navigate to the appropriate page based on the role
-//     if (userRole === "admin") {
-//       navigate("/admin");
-//     } else if (userRole === "user") {
-//       navigate("/");
-//     } else {
-//       setError("Unknown role. Please contact the administrator.");
-//     }
-//   } catch (err) {
-//     setError("Invalid username or password.");
-//   }
-// };
-
-
-
-//   return (
-//     <div className="flex items-center justify-center min-h-screen bg-gray-100">
-//       <div className="bg-white p-6 shadow-lg rounded-lg w-full max-w-md">
-//         {/* Header Section */}
-//         <div className="text-center mb-6">
-//           <img
-//             src="/demo/images/blocks/logos/hyper.svg"
-//             alt="Hyper Logo"
-//             className="mb-4 h-12 mx-auto"
-//           />
-//           <h1 className="text-gray-900 text-3xl font-semibold mb-2">Login</h1>
-//           {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-//           <p className="text-gray-600">
-//             Don’t have an account?
-//             <a
-//               href="/Register"
-//               className="ml-2 text-blue-500 font-medium hover:underline"
-//               aria-label="Create an account"
-//             >
-//               Create today!
-//             </a>
-//           </p>
-          
-//         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-//         </div>
-
-//         {/* Form Section */}
-//         <form onSubmit={handleLogin}>
-//           <div className="mb-4">
-//             <label
-//               htmlFor="email"
-//               className="block text-gray-900 font-medium mb-2"
-//             >
-//               User Name
-//             </label>
-//             <input
-//               id="username"
-//               type="text"
-//               placeholder="Email address"
-//               value={username}
-//               onChange={(e) => setusername(e.target.value)}
-              
-//               className="w-full border-gray-300 border rounded-md px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
-//               required
-//             />
-//           </div>
-
-//           <div className="mb-4">
-//             <label
-//               htmlFor="password"
-//               className="block text-gray-900 font-medium mb-2"
-//             >
-//               Password
-//             </label>
-//             <input
-//               id="password"
-//               type="password"
-//               placeholder="Password"
-//               value={password}
-//               onChange={(e) => setPassword(e.target.value)}
-//               className="w-full border-gray-300 border rounded-md px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
-//               required
-//             />
-//           </div>
-
-//           <div className="flex items-center justify-between mb-6">
-//             <div className="flex items-center">
-//               <input
-//                 id="rememberme"
-//                 type="checkbox"
-//                 className="h-4 w-4 text-blue-500 border-gray-300 rounded focus:ring-blue-500"
-//               />
-//               <label
-//                 htmlFor="rememberme"
-//                 className="text-gray-900 ml-2"
-//               >
-//                 Remember me
-//               </label>
-//             </div>
-//             <a
-//               href="#"
-//               className="text-blue-500 font-medium hover:underline"
-//               aria-label="Forgot your password?"
-//             >
-//               Forgot your password?
-//             </a>
-//           </div>
-
-//           <button
-//             type="submit"
-//             className="w-full bg-blue-500 text-white font-medium rounded-md px-4 py-2 hover:bg-blue-600 focus:ring focus:ring-blue-300 flex items-center justify-center"
-//             aria-label="Sign In"
-//           >
-//             <i className="pi pi-user mr-2"></i>
-//             Login
-//           </button>
-//         </form>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Login;
-
-
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
-
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from '../../contexts/AuthContext';
+import AnalyticsService from "../../services/AnalyticsService";
 
 const Login = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { login } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e) => {
+  
+  const [error, setError] = useState("");
+  
+const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
+
     try {
-      const response = await axios.post(
-        "http://127.0.0.1:8000/api/login/",
-        { username, password },
-        { headers: { "Content-Type": "application/json" } }
-      );
+      const result = await login(email, password);
 
-      const { access, refresh } = response.data.tokens;
-      const userRole = response.data.user.role;
-
-      localStorage.setItem("accessToken", access);
-      localStorage.setItem("refreshToken", refresh);
-      localStorage.setItem("userRole", userRole);
-
-      if (userRole === "admin") {
-        navigate("/admin");
-      } else if (userRole === "user") {
-        navigate("/");
+      if (result.success) {
+        AnalyticsService.trackEvent('login_success', { email });
+        navigate('/');
       } else {
-        setError("Unknown role. Please contact the administrator.");
+        setError(result.error || 'Login failed');
+        AnalyticsService.trackEvent('login_failed', { email, reason: result.error });
       }
     } catch (err) {
-      if (err.response && err.response.data && err.response.data.detail) {
-        setError(err.response.data.detail);
-      } else {
-        setError("Something went wrong. Please try again.");
-      }
+      setError('An error occurred');
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [email, password, login, navigate]);
+  
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-[#FFE1A1]">
@@ -203,33 +48,37 @@ const Login = () => {
           /> */}
            
           <h1 className="text-gray-900 text-3xl font-semibold mb-2">Login</h1>
-          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+          {error && (
+          <div className="bg-red-100 text-red-700 p-3 rounded-md mb-4">
+            {error}
+          </div>
+        )}
+        
           <p className="text-gray-600">
-            Don’t have an account?
-            <a
-              href="/Register"
+            Don't have an account?{' '}
+            <Link to="/register"
               className="ml-2 text-black-500 font-medium hover:underline"
               aria-label="Create an account"
             >
               Create today!
-            </a>
+            </Link>
           </p>
         </div>
 
-        <form onSubmit={handleLogin}>
+        <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label
-              htmlFor="username"
+              htmlFor="email"
               className="block text-gray-900 font-medium mb-2"
             >
-              User Name
+              Email
             </label>
             <input
-              id="username"
-              type="text"
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              id="email"
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full border-gray-300 border rounded-md px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
               required
             />
@@ -275,10 +124,11 @@ const Login = () => {
 
           <button
             type="submit"
+            disabled = {loading}
             className="w-full bg-primary text-white font-medium rounded-md px-4 py-2  focus:ring focus:ring-blue-300 flex items-center justify-center"
             aria-label="Sign In"
           >
-            Login
+           {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
       </div>
