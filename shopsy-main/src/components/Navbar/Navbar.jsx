@@ -81,46 +81,12 @@ const Menu = [
 ];
 
 
-const DropdownLinks = [
-  {
-    id: 1,
-    name: "Trending Products",
-    link: "/#",
-  },
-  {
-    id: 2,
-    name: "Best Selling",
-    link: "/#",
-  },
-  {
-    id: 3,
-    name: "Top Rated",
-    link: "/#",
-  },
-];
 
 // =============================================================================
 // MAIN COMPONENT
 // =============================================================================
 
-/**
- * Navbar Component
- * 
- * TODO: Add React.memo for performance
- * OPTIMIZATION: Prevent unnecessary re-renders
- * 
- * SUGGESTED IMPLEMENTATION:
- * ```
- * const Navbar = memo(({ handleOrderPopup }) => {
- *   // ... component code
- * })
- * ```
- * 
- * @component
- * @param {Object} props - Component props
- * @param {Function} props.handleOrderPopup - Callback to open order popup modal
- * @returns {JSX.Element} Navbar component
- */
+
 const Navbar = memo(({ handleOrderPopup = () => {} }) => {
   // ---------------------------------------------------------------------------
   // STATE MANAGEMENT
@@ -302,45 +268,7 @@ const Navbar = memo(({ handleOrderPopup = () => {} }) => {
         </ul>
       </div>
       
-      {/* <div data-aos="zoom-in" className="flex justify-center">
-        <ul className="sm:flex hidden items-center gap-4">
-          
-          {Menu.map((data) => (
-            <li key={data.id}>
-              <a
-                href={data.link}
-                className="inline-block px-4 hover:text-primary duration-200"
-              >
-                {data.name}
-              </a>
-            </li>
-          ))}
-
-          
-          <li className="group relative cursor-pointer">
-            <a href="#" className="flex items-center gap-[2px] py-2">
-              Trending Products
-              <span>
-                <FaCaretDown className="transition-all duration-200 group-hover:rotate-180" />
-              </span>
-            </a>
-            <div className="absolute z-[9999] hidden group-hover:block w-[200px] rounded-md bg-white p-2 text-black shadow-md">
-              <ul>
-                {DropdownLinks.map((data) => (
-                  <li key={data.id}>
-                    <a
-                      href={data.link}
-                      className="inline-block w-full rounded-md p-2 hover:bg-primary/20 "
-                    >
-                      {data.name}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </li>
-        </ul>
-      </div> */}
+      
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="sm:hidden bg-white dark:bg-gray-800">

@@ -11,6 +11,7 @@ from django.contrib.auth import get_user_model
 from django.utils.timezone import now
 from django.db.models import Q
 import logging
+import hashlib
 
 from .models import UserSession, LoginAttempt
 from .serializers import (
@@ -52,11 +53,18 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                 
                 # Create session record
                 access_token = response.data.get('access')
-                UserSession.objects.create(
+                # ✅ FIX: Hash the token to create a unique identifier
+                token_hash = hashlib.sha256(access_token.encode()).hexdigest()[:50]
+
+                # ✅ FIX: Use get_or_create or update existing session
+                session, created = UserSession.objects.update_or_create(
                     user=user,
-                    token=access_token[:50],  # Store first 50 chars
-                    ip_address=ip_address,
-                    user_agent=user_agent
+                    token=token_hash,
+                    defaults={
+                        'ip_address': ip_address,
+                        'user_agent': user_agent,
+                        'is_active': True,
+                    }
                 )
                 
                 # Track analytics

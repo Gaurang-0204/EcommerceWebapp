@@ -34,6 +34,33 @@ def track_event(request):
             event_data=event_data,
             request=request
         )
+
+        # ✅ STEP 2: Call specific handlers based on event type
+        if event_type == 'menu_click':
+            menu_item = event_data.get('menuItem')
+            if menu_item:
+                logger.info(f'Tracking menu click: {menu_item} for user {user_id}')
+                analytics_service.track_menu_click(
+                    menu_item=menu_item,
+                    user_id=user_id
+                )
+        
+        elif event_type == 'search_query':
+            query = event_data.get('query')
+            result_count = event_data.get('resultCount', 0)
+            if query:
+                logger.info(f'Tracking search: {query}')
+                analytics_service.track_search(
+                    query=query,
+                    result_count=result_count,
+                    user_id=user_id
+                )
+        
+        elif event_type == 'add_to_cart':
+            product_id = event_data.get('productId')
+            if product_id:
+                logger.info(f'Tracking add to cart: product {product_id}')
+                # Add specific cart tracking here if needed
         
         return Response({'success': True})
     except Exception as e:

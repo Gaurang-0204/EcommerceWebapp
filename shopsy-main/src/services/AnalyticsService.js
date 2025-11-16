@@ -71,40 +71,52 @@ class AnalyticsService {
     }
   }
 
-  /**
-   * Flush events to server
-   */
-  async flushEvents() {
-    if (this.eventQueue.length === 0 || !this.isOnline) {
-      return;
-    }
+/**
+ * Flush events to server
+ */
+async flushEvents() {
+  if (this.eventQueue.length === 0 || !this.isOnline) {
+    return;
+  }
 
-    const eventsToSend = [...this.eventQueue];
-    this.eventQueue = [];
+  const eventsToSend = [...this.eventQueue];
+  this.eventQueue = [];
 
-    try {
+  try {
+    // ✅ FIX: Send each event individually
+    for (const event of eventsToSend) {
+      const token = localStorage.getItem('accessToken');
+      
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Only add Authorization if token exists
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/analytics/track/`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken') || ''}`,
-        },
-        body: JSON.stringify({
-          event_type: eventsToSend?.event_type,
-          event_data: eventsToSend,
-        }),
+        headers,
+        body: JSON.stringify(event),  // ✅ Send individual event object
       });
 
       if (!response.ok) {
-        // Re-queue events if failed
-        this.eventQueue = eventsToSend.concat(this.eventQueue);
+        console.error('Failed to track event:', event.event_type);
+        // Re-queue failed event
+        this.eventQueue.push(event);
+      } else {
+        console.log('✅ Event tracked:', event.event_type);
       }
-    } catch (error) {
-      console.error('Error flushing events:', error);
-      // Re-queue events
-      this.eventQueue = eventsToSend.concat(this.eventQueue);
     }
+  } catch (error) {
+    console.error('Error flushing events:', error);
+    // Re-queue all events
+    this.eventQueue = eventsToSend.concat(this.eventQueue);
   }
+}
+
 
   /**
    * Start periodic event flushing
